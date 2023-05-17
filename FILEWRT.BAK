@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    char fileName[50], tempFile[50];
+    FILE *file, *temp;
+    char buffer[1000], insertLine[1000] = "Hello World\n";
+    int insertDone = 0;
+
+    // Get the name of the file to insert into
+    printf("Enter the name of the file to insert into: ");
+    fgets(fileName, sizeof(fileName), stdin);
+    fileName[strcspn(fileName, "\n")] = '\0';
+
+    // Open the file for reading
+    file = fopen(fileName, "r");
+    if (file == NULL) {
+        printf("Error: could not open file\n");
+        return 1;
+    }
+
+    // Create a temporary file for writing
+    sprintf(tempFile, "%s.tmp", fileName);
+    temp = fopen(tempFile, "w");
+    if (temp == NULL) {
+        printf("Error: could not create temporary file\n");
+        fclose(file);
+        return 1;
+    }
+
+    // Insert the line at the beginning of the file
+    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        if (!insertDone) {
+            fputs(insertLine, temp);
+            insertDone = 1;
+        }
+        fputs(buffer, temp);
+    }
+
+    // If we haven't inserted the line yet, add it to the end of the file
+    if (!insertDone) {
+        fputs(insertLine, temp);
+    }
+
+    // Close the files and delete the original file
+    fclose(file);
+    fclose(temp);
+    remove(fileName);
+
+    // Rename the temporary file to the original file name
+    if (rename(tempFile, fileName) != 0) {
+        printf("Error: could not rename temporary file\n");
+        return 1;
+    }
+
+    printf("Successfully inserted line into file!\n");
+
+    return 0;
+}
